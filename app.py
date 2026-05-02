@@ -144,10 +144,12 @@ PLOT_LAYOUT = dict(
     plot_bgcolor="rgba(0,0,0,0)",
     font=dict(color="#9490B0", family="Inter"),
     margin=dict(l=30, r=20, t=30, b=30),
-    legend=dict(font=dict(size=11, color="#9490B0"), bgcolor="rgba(0,0,0,0)"),
-    xaxis=dict(gridcolor="rgba(255,255,255,0.06)", color="#9490B0"),
-    yaxis=dict(gridcolor="rgba(255,255,255,0.06)", color="#9490B0"),
 )
+
+# Default axis/legend styles reused per chart
+_LEGEND = dict(font=dict(size=11, color="#9490B0"), bgcolor="rgba(0,0,0,0)")
+_XAXIS  = dict(gridcolor="rgba(255,255,255,0.06)", color="#9490B0")
+_YAXIS  = dict(gridcolor="rgba(255,255,255,0.06)", color="#9490B0")
 
 # ── DATA ──────────────────────────────────────────────────────────────────────
 years = [2026,2027,2028,2029,2030,2031,2032,2033]
@@ -269,7 +271,8 @@ with tabs[0]:
                 radialaxis=dict(visible=True, range=[0,100], gridcolor="rgba(255,255,255,0.06)", tickfont=dict(size=9,color="#9490B0"), tickcolor="#9490B0"),
                 angularaxis=dict(gridcolor="rgba(255,255,255,0.08)", tickfont=dict(size=10,color="#9490B0"))
             ),
-            legend=dict(font=dict(size=10,color="#9490B0"),bgcolor="rgba(0,0,0,0)",orientation="h",y=-0.15)
+            legend=dict(font=dict(size=10,color="#9490B0"),bgcolor="rgba(0,0,0,0)",orientation="h",y=-0.15),
+            showlegend=True,
         )
         st.plotly_chart(fig_radar, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
@@ -316,7 +319,7 @@ with tabs[0]:
             fill=fill if name != "Composite" else "none",
             fillcolor=fillcol if name != "Composite" else "rgba(0,0,0,0)",
             mode="lines+markers", marker=dict(size=5, color=color)))
-    fig_traj.update_layout(**PLOT_LAYOUT, height=280, yaxis=dict(range=[70,100],gridcolor="rgba(255,255,255,0.06)",color="#9490B0"))
+    fig_traj.update_layout(**PLOT_LAYOUT, height=280, xaxis=_XAXIS, yaxis=dict(range=[70,100],gridcolor="rgba(255,255,255,0.06)",color="#9490B0"), legend=_LEGEND)
     st.plotly_chart(fig_traj, use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -350,8 +353,8 @@ with tabs[1]:
             text=[f"{v:,}" for v in env_bar_vals], textposition="outside",
             textfont=dict(color="#9490B0", size=10)
         ))
-        fig_env.update_layout(**PLOT_LAYOUT, height=300,
-            xaxis=dict(tickfont=dict(size=10),gridcolor="rgba(0,0,0,0)"),
+        fig_env.update_layout(**PLOT_LAYOUT, height=300, legend=_LEGEND,
+            xaxis=dict(tickfont=dict(size=10),gridcolor="rgba(0,0,0,0)",color="#9490B0"),
             yaxis=dict(tickformat=",", gridcolor="rgba(255,255,255,0.06)", color="#9490B0")
         )
         st.plotly_chart(fig_env, use_container_width=True)
@@ -367,7 +370,7 @@ with tabs[1]:
                         line=dict(color="#15151E", width=2))
         ))
         fig_donut.update_layout(**PLOT_LAYOUT, height=300,
-            legend=dict(font=dict(size=10,color="#9490B0"),orientation="v",x=1.0),
+            legend=dict(font=dict(size=10,color="#9490B0"),bgcolor="rgba(0,0,0,0)",orientation="v",x=1.0),
             showlegend=True)
         st.plotly_chart(fig_donut, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
@@ -381,7 +384,7 @@ with tabs[1]:
     fig_env10.add_trace(go.Scatter(x=ten_years, y=[80,81,82,83,84,85,86,87,87,88],
         name="Efficiency %", line=dict(color="#FFD166",width=2,dash="dot"),
         mode="lines+markers", marker=dict(size=4), yaxis="y2"))
-    fig_env10.update_layout(**PLOT_LAYOUT, height=280,
+    fig_env10.update_layout(**PLOT_LAYOUT, height=280, xaxis=_XAXIS, yaxis=_YAXIS, legend=_LEGEND,
         yaxis2=dict(overlaying="y", side="right", showgrid=False, color="#FFD166",
                     ticksuffix="%", range=[75,95]))
     st.plotly_chart(fig_env10, use_container_width=True)
@@ -436,7 +439,7 @@ with tabs[2]:
             marker=dict(colors=["#7C5CFF","#5EDFA8","#FFD166","#FF7B5C"],
                         line=dict(color="#15151E",width=2))
         ))
-        fig_team.update_layout(**PLOT_LAYOUT, height=300)
+        fig_team.update_layout(**PLOT_LAYOUT, height=300, legend=_LEGEND)
         st.plotly_chart(fig_team, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -468,8 +471,8 @@ with tabs[2]:
         marker_color="rgba(124,92,255,0.7)", marker_cornerradius=4))
     fig_social.add_trace(go.Bar(name="EW Solution Impact Score", x=prob_labels, y=ew_impact,
         marker_color="rgba(94,223,168,0.5)", marker_cornerradius=4))
-    fig_social.update_layout(**PLOT_LAYOUT, height=300, barmode="group",
-        legend=dict(orientation="h", y=-0.2, font=dict(size=10)))
+    fig_social.update_layout(**PLOT_LAYOUT, height=300, barmode="group", xaxis=_XAXIS, yaxis=_YAXIS,
+        legend=dict(orientation="h", y=-0.2, bgcolor="rgba(0,0,0,0)", font=dict(size=10,color="#9490B0")))
     st.plotly_chart(fig_social, use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -523,7 +526,7 @@ with tabs[3]:
             marker=dict(colors=["#7C5CFF","#5EDFA8","#FFD166","#FF7B5C","#A0A0FF","#F0A0FF"],
                         line=dict(color="#15151E",width=2))
         ))
-        fig_fund.update_layout(**PLOT_LAYOUT, height=300)
+        fig_fund.update_layout(**PLOT_LAYOUT, height=300, legend=_LEGEND)
         st.plotly_chart(fig_fund, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -534,9 +537,9 @@ with tabs[3]:
         marker_color=bar_colors, marker_line_width=0))
     fig_fin.add_trace(go.Scatter(x=finance_years, y=cash_inflow, name="Cash Inflow ($M)",
         line=dict(color="#FFD166",width=2), mode="lines+markers", marker=dict(size=5)))
-    fig_fin.update_layout(**PLOT_LAYOUT, height=300,
-        yaxis=dict(ticksuffix="M", tickprefix="$", gridcolor="rgba(255,255,255,0.06)"),
-        legend=dict(orientation="h",y=-0.2,font=dict(size=10)))
+    fig_fin.update_layout(**PLOT_LAYOUT, height=300, xaxis=_XAXIS,
+        yaxis=dict(ticksuffix="M", tickprefix="$", gridcolor="rgba(255,255,255,0.06)", color="#9490B0"),
+        legend=dict(orientation="h",y=-0.2,bgcolor="rgba(0,0,0,0)",font=dict(size=10,color="#9490B0")))
     st.plotly_chart(fig_fin, use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -590,7 +593,7 @@ with tabs[4]:
                 name=label, showlegend=False,
                 hovertemplate=f"<b>{label}</b><br>Stakeholder Importance: {x}<br>Business Impact: {y}<extra></extra>"
             ))
-        fig_mat.update_layout(**PLOT_LAYOUT, height=480,
+        fig_mat.update_layout(**PLOT_LAYOUT, height=480, legend=_LEGEND,
             xaxis=dict(range=[4,10.5], title="Importance to Stakeholders →",
                        titlefont=dict(size=11), gridcolor="rgba(255,255,255,0.06)", color="#9490B0"),
             yaxis=dict(range=[4,10.5], title="Business Impact →",
@@ -633,9 +636,9 @@ with tabs[5]:
         for name, vals, color in bar_data:
             fig_comp.add_trace(go.Bar(name=name, x=["Environmental","Social","Governance"], y=vals,
                 marker_color=color, marker_line_width=0))
-        fig_comp.update_layout(**PLOT_LAYOUT, height=240, barmode="group",
-            yaxis=dict(range=[0,100],gridcolor="rgba(255,255,255,0.06)"),
-            legend=dict(orientation="h",y=-0.25,font=dict(size=10)))
+        fig_comp.update_layout(**PLOT_LAYOUT, height=240, barmode="group", xaxis=_XAXIS,
+            yaxis=dict(range=[0,100],gridcolor="rgba(255,255,255,0.06)",color="#9490B0"),
+            legend=dict(orientation="h",y=-0.25,bgcolor="rgba(0,0,0,0)",font=dict(size=10,color="#9490B0")))
         st.plotly_chart(fig_comp, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -670,9 +673,9 @@ with tabs[5]:
         marker_color="rgba(94,223,168,0.8)", marker_line_width=0))
     fig_mkt.add_trace(go.Bar(name="Best Competitor", x=sectors, y=[0,0,80,200,0,50],
         marker_color="rgba(100,100,120,0.5)", marker_line_width=0))
-    fig_mkt.update_layout(**PLOT_LAYOUT, height=280, barmode="group",
-        yaxis=dict(tickprefix="$", ticksuffix="B", gridcolor="rgba(255,255,255,0.06)"),
-        legend=dict(orientation="h", y=-0.2, font=dict(size=10)))
+    fig_mkt.update_layout(**PLOT_LAYOUT, height=280, barmode="group", xaxis=_XAXIS,
+        yaxis=dict(tickprefix="$", ticksuffix="B", gridcolor="rgba(255,255,255,0.06)", color="#9490B0"),
+        legend=dict(orientation="h", y=-0.2, bgcolor="rgba(0,0,0,0)", font=dict(size=10,color="#9490B0")))
     st.plotly_chart(fig_mkt, use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
