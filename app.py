@@ -247,12 +247,18 @@ with tabs[0]:
             ("Resonant Link",   [42,58,48,52,63,38], "#00CFFF"),
             ("Trad. Players",   [30,40,30,60,55,65], "#FF7B5C"),
         ]
+        def hex_to_rgba(hex_color, alpha=0.15):
+            r = int(hex_color[1:3], 16)
+            g = int(hex_color[3:5], 16)
+            b = int(hex_color[5:7], 16)
+            return f"rgba({r},{g},{b},{alpha})"
+
         fig_radar = go.Figure()
         for name, vals, color in radar_datasets:
             fig_radar.add_trace(go.Scatterpolar(
                 r=vals + [vals[0]], theta=radar_labels + [radar_labels[0]],
                 fill="toself" if name == "ElectraWireless" else "none",
-                fillcolor=color+"26" if name == "ElectraWireless" else "rgba(0,0,0,0)",
+                fillcolor=hex_to_rgba(color, 0.15) if name == "ElectraWireless" else "rgba(0,0,0,0)",
                 line=dict(color=color, width=2 if name=="ElectraWireless" else 1.5,
                           dash="solid" if name=="ElectraWireless" else "dot"),
                 name=name
