@@ -584,10 +584,16 @@ with tabs[4]:
     with col_map:
         st.markdown('<div class="card-wrap"><div class="card-title">Materiality Bubble Map — ElectraWireless 2026</div>', unsafe_allow_html=True)
         fig_mat = go.Figure()
+        def to_rgba(hex_color, alpha=0.65):
+            r2 = int(hex_color[1:3], 16)
+            g2 = int(hex_color[3:5], 16)
+            b2 = int(hex_color[5:7], 16)
+            return f"rgba({r2},{g2},{b2},{alpha})"
+
         for x, y, r, label, color in mat_data:
             fig_mat.add_trace(go.Scatter(
                 x=[x], y=[y], mode="markers+text",
-                marker=dict(size=r*2, color=color+"AA", line=dict(color=color,width=1.5)),
+                marker=dict(size=r*2, color=to_rgba(color, 0.65), line=dict(color=color, width=1.5)),
                 text=[label], textposition="top center",
                 textfont=dict(size=9, color="#F0EEF8"),
                 name=label, showlegend=False,
