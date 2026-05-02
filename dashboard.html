@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ElectraWireless ESG Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0D0D12;
+    --surface: #15151E;
+    --surface2: #1C1C2A;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #F0EEF8;
+    --muted: #9490B0;
+    --accent: #7C5CFF;
+    --accent2: #5EDFA8;
+    --accent3: #FF7B5C;
+    --accent4: #FFD166;
+    --e-color: #5EDFA8;
+    --s-color: #7C5CFF;
+    --g-color: #FFD166;
+    --font: 'Inter', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; padding: 0; }
+  .header { background: linear-gradient(135deg, #1a0a3d 0%, #0D0D12 60%); border-bottom: 1px solid var(--border2); padding: 2rem 3rem 1.5rem; position: relative; overflow: hidden; }
+  .header::before { content: ''; position: absolute; top: -60px; right: -60px; width: 300px; height: 300px; background: radial-gradient(circle, rgba(124,92,255,0.15) 0%, transparent 70%); pointer-events: none; }
+  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .logo-area { display: flex; align-items: center; gap: 12px; }
+  .logo-dot { width: 38px; height: 38px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .logo-text { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+  .logo-sub { font-size: 11px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
+  .badge { background: rgba(94,223,168,0.12); border: 1px solid rgba(94,223,168,0.3); color: var(--accent2); font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.5px; }
+  .header h1 { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -0.8px; margin-bottom: 4px; }
+  .header p { color: var(--muted); font-size: 13px; }
+  .nav { display: flex; gap: 0; border-bottom: 1px solid var(--border); padding: 0 3rem; background: var(--surface); overflow-x: auto; }
+  .nav-tab { padding: 14px 20px; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; white-space: nowrap; background: none; border-top: none; border-left: none; border-right: none; }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .page { display: none; padding: 2rem 3rem; max-width: 1400px; margin: 0 auto; }
+  .page.active { display: block; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px; }
+  .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .card-title { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; position: relative; overflow: hidden; }
+  .kpi-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--accent-c, var(--accent)); }
+  .kpi-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .kpi-value { font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700; line-height: 1; }
+  .kpi-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .kpi-trend { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; margin-top: 4px; }
+  .trend-up { color: var(--accent2); }
+  .trend-dn { color: var(--accent3); }
+  .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .section-title .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); display: inline-block; }
+  .chart-wrap { position: relative; width: 100%; }
+  .score-row { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .score-row:last-child { border-bottom: none; }
+  .score-label { flex: 1; font-size: 13px; }
+  .score-bar-wrap { flex: 2; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .score-bar { height: 100%; border-radius: 3px; }
+  .score-val { font-size: 13px; font-weight: 600; min-width: 36px; text-align: right; }
+  .mat-wrap { position: relative; width: 100%; height: 380px; }
+  .comp-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .comp-name { font-size: 12px; min-width: 120px; }
+  .comp-bar-wrap { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .comp-bar { height: 100%; border-radius: 4px; }
+  .comp-val { font-size: 12px; font-weight: 600; min-width: 32px; text-align: right; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 12px; font-size: 12px; color: var(--muted); }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  .impact-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+  .impact-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+  .impact-icon { font-size: 28px; margin-bottom: 8px; }
+  .impact-val { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; }
+  .impact-desc { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  table.esg-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .esg-table th { padding: 10px 12px; font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); text-align: left; border-bottom: 1px solid var(--border2); }
+  .esg-table td { padding: 11px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .esg-table tr:last-child td { border-bottom: none; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+  .pill-green { background: rgba(94,223,168,0.15); color: #5EDFA8; }
+  .pill-amber { background: rgba(255,209,102,0.15); color: #FFD166; }
+  .pill-red { background: rgba(255,123,92,0.15); color: #FF7B5C; }
+  .chk { color: var(--accent2); font-weight: 700; }
+  .cross { color: var(--accent3); }
+  @media (max-width: 900px) { .grid-4 { grid-template-columns: repeat(2,1fr); } .grid-3 { grid-template-columns: repeat(2,1fr); } .grid-2-1 { grid-template-columns: 1fr; } .page { padding: 1.5rem; } .header { padding: 1.5rem 1.5rem 1rem; } .nav { padding: 0 1.5rem; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <div class="logo-area">
+      <div class="logo-dot">⚡</div>
+      <div>
+        <div class="logo-text">ElectraWireless</div>
+        <div class="logo-sub">ESG Dashboard · 2026</div>
+      </div>
+    </div>
+    <div class="badge">✦ ESG Rating: AA</div>
+  </div>
+  <h1>Sustainability &amp; ESG Performance</h1>
+  <p>Tracking Environmental, Social &amp; Governance impact across all phases — Q1 2026 Stakeholder Report</p>
+</div>
+
+<div class="nav">
+  <button class="nav-tab active" onclick="showPage('overview',this)">Overview</button>
+  <button class="nav-tab" onclick="showPage('environmental',this)">Environmental</button>
+  <button class="nav-tab" onclick="showPage('social',this)">Social</button>
+  <button class="nav-tab" onclick="showPage('governance',this)">Governance</button>
+  <button class="nav-tab" onclick="showPage('materiality',this)">Materiality Map</button>
+  <button class="nav-tab" onclick="showPage('competitors',this)">Competitive</button>
+</div>
+
+<!-- OVERVIEW -->
+<div id="page-overview" class="page active">
+  <div class="grid-4">
+    <div class="kpi-card" style="--accent-c:#5EDFA8"><div class="kpi-label">Environmental Score</div><div class="kpi-value" style="color:#5EDFA8">88</div><div class="kpi-trend trend-up">▲ +12 vs industry avg</div><div class="kpi-sub">MSCI A rating equivalent</div></div>
+    <div class="kpi-card" style="--accent-c:#7C5CFF"><div class="kpi-label">Social Score</div><div class="kpi-value" style="color:#7C5CFF">82</div><div class="kpi-trend trend-up">▲ +8 vs industry avg</div><div class="kpi-sub">20+ nationalities on team</div></div>
+    <div class="kpi-card" style="--accent-c:#FFD166"><div class="kpi-label">Governance Score</div><div class="kpi-value" style="color:#FFD166">79</div><div class="kpi-trend trend-up">▲ +6 vs industry avg</div><div class="kpi-sub">US-registered, global ops</div></div>
+    <div class="kpi-card" style="--accent-c:#FF7B5C"><div class="kpi-label">CO₂ Avoided (annual)</div><div class="kpi-value" style="color:#FF7B5C">77.5K</div><div class="kpi-trend trend-up">▲ Tons equivalent</div><div class="kpi-sub">Cu + Al waste elimination</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Overall ESG Radar — ElectraWireless vs. Competitors</div>
+      <div class="legend" style="margin-top:10px">
+        <span class="legend-item"><span class="legend-dot" style="background:#7C5CFF"></span>ElectraWireless</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#5EDFA8"></span>WiTricity</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#FFD166"></span>Ossia</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#FF7B5C"></span>Trad. Players</span>
+      </div>
+      <div class="chart-wrap" style="height:300px"><canvas id="radarChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">ESG Score Breakdown — ElectraWireless</div>
+      <div style="margin-top:16px">
+        <div class="score-row"><div class="score-label">Carbon Footprint Reduction</div><div class="score-bar-wrap"><div class="score-bar" style="width:92%;background:#5EDFA8"></div></div><div class="score-val" style="color:#5EDFA8">92</div></div>
+        <div class="score-row"><div class="score-label">E-Waste Reduction</div><div class="score-bar-wrap"><div class="score-bar" style="width:88%;background:#5EDFA8"></div></div><div class="score-val" style="color:#5EDFA8">88</div></div>
+        <div class="score-row"><div class="score-label">Energy Efficiency</div><div class="score-bar-wrap"><div class="score-bar" style="width:85%;background:#5EDFA8"></div></div><div class="score-val" style="color:#5EDFA8">85</div></div>
+        <div class="score-row"><div class="score-label">Workforce Diversity</div><div class="score-bar-wrap"><div class="score-bar" style="width:90%;background:#7C5CFF"></div></div><div class="score-val" style="color:#7C5CFF">90</div></div>
+        <div class="score-row"><div class="score-label">Safety Innovation</div><div class="score-bar-wrap"><div class="score-bar" style="width:87%;background:#7C5CFF"></div></div><div class="score-val" style="color:#7C5CFF">87</div></div>
+        <div class="score-row"><div class="score-label">Community Impact</div><div class="score-bar-wrap"><div class="score-bar" style="width:78%;background:#7C5CFF"></div></div><div class="score-val" style="color:#7C5CFF">78</div></div>
+        <div class="score-row"><div class="score-label">Regulatory Compliance</div><div class="score-bar-wrap"><div class="score-bar" style="width:82%;background:#FFD166"></div></div><div class="score-val" style="color:#FFD166">82</div></div>
+        <div class="score-row"><div class="score-label">Transparency &amp; Reporting</div><div class="score-bar-wrap"><div class="score-bar" style="width:76%;background:#FFD166"></div></div><div class="score-val" style="color:#FFD166">76</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-title">Projected ESG Score Trajectory (2026–2033)</div>
+    <div class="legend" style="margin-top:10px">
+      <span class="legend-item"><span class="legend-dot" style="background:#5EDFA8"></span>Environmental</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#7C5CFF"></span>Social</span>
+      <span class="legend-item"><span class="legend-dot" style="background:#FFD166"></span>Governance</span>
+      <span class="legend-item"><span class="legend-dot" style="background:rgba(255,255,255,0.4)"></span>Composite</span>
+    </div>
+    <div class="chart-wrap" style="height:260px"><canvas id="trajectoryChart"></canvas></div>
+  </div>
+</div>
+
+<!-- ENVIRONMENTAL -->
+<div id="page-environmental" class="page">
+  <div class="grid-4">
+    <div class="kpi-card" style="--accent-c:#5EDFA8"><div class="kpi-label">Annual CO₂ Avoided</div><div class="kpi-value" style="color:#5EDFA8">77.5K</div><div class="kpi-sub">Tons per year (Cu + Al)</div></div>
+    <div class="kpi-card" style="--accent-c:#5EDFA8"><div class="kpi-label">Copper Saved</div><div class="kpi-value" style="color:#5EDFA8">5K</div><div class="kpi-sub">Tons · 17,500 CO₂ equiv.</div></div>
+    <div class="kpi-card" style="--accent-c:#5EDFA8"><div class="kpi-label">Aluminium Saved</div><div class="kpi-value" style="color:#5EDFA8">5K</div><div class="kpi-sub">Tons · 60,000 CO₂ equiv.</div></div>
+    <div class="kpi-card" style="--accent-c:#5EDFA8"><div class="kpi-label">WPT Efficiency</div><div class="kpi-value" style="color:#5EDFA8">&gt;80%</div><div class="kpi-sub">Energy conversion rate</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Annual Material &amp; CO₂ Savings</div>
+      <div class="legend" style="margin-top:10px"><span class="legend-item"><span class="legend-dot" style="background:#5EDFA8"></span>CO₂ Reduction (tons)</span><span class="legend-item"><span class="legend-dot" style="background:#7C5CFF"></span>Materials Saved (tons)</span></div>
+      <div class="chart-wrap" style="height:280px"><canvas id="envBarChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Carbon Footprint Reduction by Phase</div>
+      <div class="legend" style="margin-top:10px"><span class="legend-item"><span class="legend-dot" style="background:#5EDFA8"></span>Kitchen (P1)</span><span class="legend-item"><span class="legend-dot" style="background:#7C5CFF"></span>E-bikes (P2)</span><span class="legend-item"><span class="legend-dot" style="background:#FFD166"></span>Robotics (P3)</span><span class="legend-item"><span class="legend-dot" style="background:#FF7B5C"></span>Furniture (P4)</span><span class="legend-item"><span class="legend-dot" style="background:#A0A0FF"></span>EV (P5)</span></div>
+      <div class="chart-wrap" style="height:280px"><canvas id="carbonDonut"></canvas></div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-title">10-Year Environmental Impact Projection</div>
+    <div class="legend" style="margin-top:10px"><span class="legend-item"><span class="legend-dot" style="background:#5EDFA8"></span>CO₂ Avoided (tons ×1000)</span><span class="legend-item"><span class="legend-dot" style="background:#7C5CFF"></span>Materials Saved (tons)</span><span class="legend-item"><span class="legend-dot" style="background:#FFD166"></span>Energy Efficiency %</span></div>
+    <div class="chart-wrap" style="height:240px"><canvas id="envLineChart"></canvas></div>
+  </div>
+  <div class="section-title"><span class="dot"></span>Environmental Initiatives</div>
+  <div class="impact-grid">
+    <div class="impact-box"><div class="impact-icon">🔋</div><div class="impact-val" style="color:#5EDFA8">&gt;80%</div><div class="impact-desc">Wireless Power Transfer efficiency — reduces energy loss vs traditional cables</div></div>
+    <div class="impact-box"><div class="impact-icon">♻️</div><div class="impact-val" style="color:#5EDFA8">10K tons</div><div class="impact-desc">Annual metal waste eliminated — aluminium &amp; copper preserved from landfill</div></div>
+    <div class="impact-box"><div class="impact-icon">🌿</div><div class="impact-val" style="color:#5EDFA8">Zero</div><div class="impact-desc">Short-circuit risk eliminated — reduces hazardous e-waste from cable failures</div></div>
+    <div class="impact-box"><div class="impact-icon">⚡</div><div class="impact-val" style="color:#5EDFA8">AI-managed</div><div class="impact-desc">Real-time energy management system — AI optimises power delivery dynamically</div></div>
+    <div class="impact-box"><div class="impact-icon">🚲</div><div class="impact-val" style="color:#5EDFA8">$15B</div><div class="impact-desc">Sustainable e-bike market supported — clean transport wireless charging</div></div>
+    <div class="impact-box"><div class="impact-icon">🏙️</div><div class="impact-val" style="color:#5EDFA8">Phase 5</div><div class="impact-desc">EV wireless charging infra — zero-cable cities &amp; public transport hubs</div></div>
+  </div>
+</div>
+
+<!-- SOCIAL -->
+<div id="page-social" class="page">
+  <div class="grid-4">
+    <div class="kpi-card" style="--accent-c:#7C5CFF"><div class="kpi-label">Team Nationalities</div><div class="kpi-value" style="color:#7C5CFF">20+</div><div class="kpi-sub">Global talent pool</div></div>
+    <div class="kpi-card" style="--accent-c:#7C5CFF"><div class="kpi-label">Women in Leadership</div><div class="kpi-value" style="color:#7C5CFF">33%</div><div class="kpi-sub">C-suite &amp; executive level</div></div>
+    <div class="kpi-card" style="--accent-c:#7C5CFF"><div class="kpi-label">Safety Improvement</div><div class="kpi-value" style="color:#7C5CFF">100%</div><div class="kpi-sub">Electrical hazard elimination</div></div>
+    <div class="kpi-card" style="--accent-c:#7C5CFF"><div class="kpi-label">Households Impacted</div><div class="kpi-value" style="color:#7C5CFF">80%</div><div class="kpi-sub">Users with cable clutter pain</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Team Composition by Department</div>
+      <div class="legend" style="margin-top:10px"><span class="legend-item"><span class="legend-dot" style="background:#7C5CFF"></span>Engineering</span><span class="legend-item"><span class="legend-dot" style="background:#5EDFA8"></span>Business Dev</span><span class="legend-item"><span class="legend-dot" style="background:#FFD166"></span>Finance</span><span class="legend-item"><span class="legend-dot" style="background:#FF7B5C"></span>App Dev</span></div>
+      <div class="chart-wrap" style="height:280px"><canvas id="teamDonut"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Academic &amp; Innovation Partners</div>
+      <div style="margin-top:16px">
+        <div class="score-row"><div class="score-label">Hong Kong Polytechnic (R&amp;D)</div><div class="score-bar-wrap"><div class="score-bar" style="width:90%;background:#7C5CFF"></div></div><div class="score-val" style="color:#7C5CFF">Active</div></div>
+        <div class="score-row"><div class="score-label">RMIT University, Australia</div><div class="score-bar-wrap"><div class="score-bar" style="width:75%;background:#7C5CFF"></div></div><div class="score-val" style="color:#7C5CFF">Active</div></div>
+        <div class="score-row"><div class="score-label">TALim Belgium (Youth)</div><div class="score-bar-wrap"><div class="score-bar" style="width:60%;background:#7C5CFF"></div></div><div class="score-val" style="color:#7C5CFF">Active</div></div>
+        <div class="score-row"><div class="score-label">MIT (Research Ally)</div><div class="score-bar-wrap"><div class="score-bar" style="width:50%;background:#5EDFA8"></div></div><div class="score-val" style="color:#5EDFA8">Target</div></div>
+        <div class="score-row"><div class="score-label">Kaggle AI Competition Rank</div><div class="score-bar-wrap"><div class="score-bar" style="width:99%;background:#FFD166"></div></div><div class="score-val" style="color:#FFD166">#4</div></div>
+        <div class="score-row"><div class="score-label">Global Media Coverage</div><div class="score-bar-wrap"><div class="score-bar" style="width:85%;background:#5EDFA8"></div></div><div class="score-val" style="color:#5EDFA8">10+</div></div>
+        <div class="score-row"><div class="score-label">Countries Active In</div><div class="score-bar-wrap"><div class="score-bar" style="width:70%;background:#5EDFA8"></div></div><div class="score-val" style="color:#5EDFA8">9</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-title">Social Impact — Problem Solved for End Users</div>
+    <div class="legend" style="margin-top:10px"><span class="legend-item"><span class="legend-dot" style="background:#7C5CFF"></span>Users Affected</span><span class="legend-item"><span class="legend-dot" style="background:#5EDFA8; opacity:0.6"></span>Impact Score (ElectraWireless Solution)</span></div>
+    <div class="chart-wrap" style="height:260px"><canvas id="socialBar"></canvas></div>
+  </div>
+</div>
+
+<!-- GOVERNANCE -->
+<div id="page-governance" class="page">
+  <div class="grid-3">
+    <div class="kpi-card" style="--accent-c:#FFD166"><div class="kpi-label">Registration</div><div class="kpi-value" style="color:#FFD166; font-size:22px">USA 🇺🇸</div><div class="kpi-sub">US-incorporated, global operations</div></div>
+    <div class="kpi-card" style="--accent-c:#FFD166"><div class="kpi-label">Board Advisors</div><div class="kpi-value" style="color:#FFD166">6</div><div class="kpi-sub">Expert advisors across 5 countries</div></div>
+    <div class="kpi-card" style="--accent-c:#FFD166"><div class="kpi-label">IP Protection</div><div class="kpi-value" style="color:#FFD166">US</div><div class="kpi-sub">Patent registration planned</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Governance Checklist</div>
+      <table class="esg-table" style="margin-top:12px">
+        <thead><tr><th>Area</th><th>Status</th><th>Rating</th></tr></thead>
+        <tbody>
+          <tr><td>US Entity Registration</td><td><span class="chk">✔</span> Complete</td><td><span class="pill pill-green">Strong</span></td></tr>
+          <tr><td>Patent / IP Strategy</td><td><span class="chk">✔</span> In Progress</td><td><span class="pill pill-amber">Active</span></td></tr>
+          <tr><td>Regulatory Compliance (FCC/CE)</td><td><span class="chk">✔</span> Planned</td><td><span class="pill pill-amber">On Track</span></td></tr>
+          <tr><td>Investor Transparency</td><td><span class="chk">✔</span> Quarterly</td><td><span class="pill pill-green">Strong</span></td></tr>
+          <tr><td>Exit Strategy Defined</td><td><span class="chk">✔</span> IPO post-P4</td><td><span class="pill pill-green">Strong</span></td></tr>
+          <tr><td>Secondary Market Liquidity</td><td><span class="chk">✔</span> Planned</td><td><span class="pill pill-amber">Active</span></td></tr>
+          <tr><td>Risk Mitigation Framework</td><td><span class="chk">✔</span> Active</td><td><span class="pill pill-green">Strong</span></td></tr>
+          <tr><td>Data Privacy Policy</td><td><span class="chk">✔</span> GDPR-aligned</td><td><span class="pill pill-green">Strong</span></td></tr>
+          <tr><td>ESG Reporting Cadence</td><td><span class="chk">✔</span> Quarterly</td><td><span class="pill pill-green">Strong</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Funding Allocation Transparency ($5M Seed)</div>
+      <div class="legend" style="margin-top:10px"><span class="legend-item"><span class="legend-dot" style="background:#7C5CFF"></span>Marketing 25%</span><span class="legend-item"><span class="legend-dot" style="background:#5EDFA8"></span>Tech Dev 20%</span><span class="legend-item"><span class="legend-dot" style="background:#FFD166"></span>Mfg &amp; Supply 20%</span><span class="legend-item"><span class="legend-dot" style="background:#FF7B5C"></span>R&amp;D 15%</span><span class="legend-item"><span class="legend-dot" style="background:#A0A0FF"></span>Contingency 10%</span><span class="legend-item"><span class="legend-dot" style="background:#F0A0FF"></span>Operations 10%</span></div>
+      <div class="chart-wrap" style="height:280px"><canvas id="fundingPie"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">10-Year Financial Forecast &amp; Governance Milestones</div>
+    <div class="legend" style="margin-top:10px"><span class="legend-item"><span class="legend-dot" style="background:#5EDFA8"></span>Net Profit/Loss ($M)</span><span class="legend-item"><span class="legend-dot" style="background:#FFD166; opacity:0.6"></span>Cash Inflow ($M)</span></div>
+    <div class="chart-wrap" style="height:260px"><canvas id="financeChart"></canvas></div>
+  </div>
+</div>
+
+<!-- MATERIALITY -->
+<div id="page-materiality" class="page">
+  <div class="grid-2" style="margin-bottom:0">
+    <div>
+      <div class="section-title"><span class="dot" style="background:#5EDFA8"></span>What is a Materiality Map?</div>
+      <p style="font-size:13px; color:var(--muted); line-height:1.7; margin-bottom:16px">A materiality map plots ESG topics by two dimensions: their <strong style="color:var(--text)">importance to stakeholders</strong> (X-axis) and their <strong style="color:var(--text)">business impact</strong> (Y-axis). Topics in the top-right quadrant are highest priority.</p>
+      <div class="legend"><span class="legend-item"><span class="legend-dot" style="background:#5EDFA8"></span>Environmental</span><span class="legend-item"><span class="legend-dot" style="background:#7C5CFF"></span>Social</span><span class="legend-item"><span class="legend-dot" style="background:#FFD166"></span>Governance</span><span class="legend-item"><span class="legend-dot" style="background:#FF7B5C"></span>Tech &amp; Innovation</span></div>
+    </div>
+    <div class="grid-2" style="margin-bottom:0">
+      <div class="kpi-card" style="--accent-c:#5EDFA8"><div class="kpi-label">High Priority Topics</div><div class="kpi-value" style="color:#5EDFA8; font-size:28px">6</div><div class="kpi-sub">Top-right quadrant</div></div>
+      <div class="kpi-card" style="--accent-c:#7C5CFF"><div class="kpi-label">Topics Tracked</div><div class="kpi-value" style="color:#7C5CFF; font-size:28px">16</div><div class="kpi-sub">Across all ESG pillars</div></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px; margin-bottom:24px">
+    <div class="card-title">ESG Materiality Map — ElectraWireless</div>
+    <div class="mat-wrap"><canvas id="matBubble" style="width:100%;height:380px"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Materiality Topics Detail</div>
+    <table class="esg-table" style="margin-top:12px">
+      <thead><tr><th>Topic</th><th>Pillar</th><th>Stakeholder Importance</th><th>Business Impact</th><th>Priority</th></tr></thead>
+      <tbody>
+        <tr><td>E-Waste Reduction</td><td style="color:#5EDFA8">E</td><td>9.2</td><td>9.5</td><td><span class="pill pill-green">Critical</span></td></tr>
+        <tr><td>Wireless Safety (No Hazard)</td><td style="color:#7C5CFF">S</td><td>9.0</td><td>9.2</td><td><span class="pill pill-green">Critical</span></td></tr>
+        <tr><td>AI-driven Energy Efficiency</td><td style="color:#FF7B5C">T</td><td>8.8</td><td>9.0</td><td><span class="pill pill-green">Critical</span></td></tr>
+        <tr><td>CO₂ Footprint Reduction</td><td style="color:#5EDFA8">E</td><td>8.5</td><td>8.8</td><td><span class="pill pill-green">Critical</span></td></tr>
+        <tr><td>Regulatory Compliance (FCC/CE)</td><td style="color:#FFD166">G</td><td>8.0</td><td>8.5</td><td><span class="pill pill-green">Critical</span></td></tr>
+        <tr><td>IP &amp; Innovation Protection</td><td style="color:#FFD166">G</td><td>7.5</td><td>8.7</td><td><span class="pill pill-green">Critical</span></td></tr>
+        <tr><td>Workforce Diversity</td><td style="color:#7C5CFF">S</td><td>7.8</td><td>7.0</td><td><span class="pill pill-amber">High</span></td></tr>
+        <tr><td>Supply Chain Sustainability</td><td style="color:#5EDFA8">E</td><td>7.2</td><td>7.5</td><td><span class="pill pill-amber">High</span></td></tr>
+        <tr><td>Data Privacy (Elly AI)</td><td style="color:#FFD166">G</td><td>7.5</td><td>7.0</td><td><span class="pill pill-amber">High</span></td></tr>
+        <tr><td>Community / Youth Innovation</td><td style="color:#7C5CFF">S</td><td>6.5</td><td>6.0</td><td><span class="pill pill-amber">Medium</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- COMPETITIVE -->
+<div id="page-competitors" class="page">
+  <div class="grid-4">
+    <div class="kpi-card" style="--accent-c:#5EDFA8"><div class="kpi-label">Feature Advantage</div><div class="kpi-value" style="color:#5EDFA8">10/10</div><div class="kpi-sub">Only company with all features</div></div>
+    <div class="kpi-card" style="--accent-c:#5EDFA8"><div class="kpi-label">Market Coverage</div><div class="kpi-value" style="color:#5EDFA8">5</div><div class="kpi-sub">Sectors served vs competitors' 2</div></div>
+    <div class="kpi-card" style="--accent-c:#FFD166"><div class="kpi-label">TAM Coverage</div><div class="kpi-value" style="color:#FFD166">$11T</div><div class="kpi-sub">Total addressable market</div></div>
+    <div class="kpi-card" style="--accent-c:#7C5CFF"><div class="kpi-label">ESG Lead vs Peers</div><div class="kpi-value" style="color:#7C5CFF">+18pts</div><div class="kpi-sub">Average composite score gap</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">ESG Score Comparison — All Competitors</div>
+      <div style="margin-top:16px">
+        <div class="comp-row"><div class="comp-name" style="color:#5EDFA8;font-weight:600">ElectraWireless</div><div class="comp-bar-wrap"><div class="comp-bar" style="width:83%;background:linear-gradient(90deg,#5EDFA8,#7C5CFF)"></div></div><div class="comp-val" style="color:#5EDFA8">83</div></div>
+        <div class="comp-row"><div class="comp-name">WiTricity</div><div class="comp-bar-wrap"><div class="comp-bar" style="width:65%;background:#555"></div></div><div class="comp-val">65</div></div>
+        <div class="comp-row"><div class="comp-name">Ossia</div><div class="comp-bar-wrap"><div class="comp-bar" style="width:58%;background:#555"></div></div><div class="comp-val">58</div></div>
+        <div class="comp-row"><div class="comp-name">Resonant Link</div><div class="comp-bar-wrap"><div class="comp-bar" style="width:60%;background:#555"></div></div><div class="comp-val">60</div></div>
+        <div class="comp-row"><div class="comp-name">Trad. Players</div><div class="comp-bar-wrap"><div class="comp-bar" style="width:52%;background:#444"></div></div><div class="comp-val">52</div></div>
+      </div>
+      <div style="margin-top:24px">
+        <div class="card-title" style="margin-bottom:12px">Sub-Score Breakdown</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="compBar"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Feature Matrix — ElectraWireless vs. Competitors</div>
+      <table class="esg-table" style="margin-top:12px; font-size:12px">
+        <thead><tr><th>Feature</th><th style="color:#5EDFA8">EW</th><th>WiTri</th><th>Ossia</th><th>ResLink</th><th>Trad.</th></tr></thead>
+        <tbody>
+          <tr><td>Wireless Power</td><td class="chk">✔</td><td class="chk">✔</td><td class="chk">✔</td><td class="chk">✔</td><td class="cross">✗</td></tr>
+          <tr><td>Heating Capability</td><td class="chk">✔</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="chk">✔</td></tr>
+          <tr><td>Smart App &amp; Data</td><td class="chk">✔</td><td class="cross">✗</td><td class="chk">✔</td><td class="cross">✗</td><td class="chk">✔</td></tr>
+          <tr><td>Foreign Object Detection</td><td class="chk">✔</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>OEM Customization</td><td class="chk">✔</td><td class="chk">✔</td><td class="chk">✔</td><td class="chk">✔</td><td class="chk">✔</td></tr>
+          <tr><td>Kitchen Appliances</td><td class="chk">✔</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="chk">✔</td></tr>
+          <tr><td>E-Bikes</td><td class="chk">✔</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="chk">✔</td></tr>
+          <tr><td>Robotics</td><td class="chk">✔</td><td class="chk">✔</td><td class="cross">✗</td><td class="cross">✗</td><td class="chk">✔</td></tr>
+          <tr><td>EV Charging</td><td class="chk">✔</td><td class="chk">✔</td><td class="cross">✗</td><td class="cross">✗</td><td class="chk">✔</td></tr>
+          <tr><td>Medical Devices</td><td class="chk">✔</td><td class="cross">✗</td><td class="cross">✗</td><td class="chk">✔</td><td class="cross">✗</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Market Opportunity by Sector — ElectraWireless Addressable vs. Competitors</div>
+    <div class="legend" style="margin-top:10px"><span class="legend-item"><span class="legend-dot" style="background:#5EDFA8"></span>ElectraWireless</span><span class="legend-item"><span class="legend-dot" style="background:#555"></span>Best Competitor</span></div>
+    <div class="chart-wrap" style="height:240px"><canvas id="marketBar"></canvas></div>
+  </div>
+</div>
+<script>
+const DARK = { color: '#9490B0', grid: 'rgba(255,255,255,0.06)', tick: '#9490B0' };
+Chart.defaults.color = DARK.color;
+Chart.defaults.borderColor = DARK.grid;
+function baseOpts() {
+  return { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: '#1C1C2A', titleColor: '#F0EEF8', bodyColor: '#9490B0', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1 } } };
+}
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  el.classList.add('active');
+}
+new Chart(document.getElementById('radarChart'), { type: 'radar', data: { labels: ['E-Waste\nReduction','Energy\nEfficiency','Safety\nInnovation','Workforce\nDiversity','Governance\nTransparency','Market\nCoverage'], datasets: [{ label:'ElectraWireless', data:[92,85,90,90,79,95], borderColor:'#7C5CFF', backgroundColor:'rgba(124,92,255,0.15)', pointBackgroundColor:'#7C5CFF', borderWidth:2, pointRadius:4 },{ label:'WiTricity', data:[45,60,50,55,65,45], borderColor:'#5EDFA8', backgroundColor:'rgba(94,223,168,0.05)', pointBackgroundColor:'#5EDFA8', borderWidth:1.5, borderDash:[4,3], pointRadius:3 },{ label:'Ossia', data:[40,55,45,50,60,40], borderColor:'#FFD166', backgroundColor:'rgba(255,209,102,0.05)', pointBackgroundColor:'#FFD166', borderWidth:1.5, borderDash:[4,3], pointRadius:3 },{ label:'Trad. Players', data:[30,40,30,60,55,65], borderColor:'#FF7B5C', backgroundColor:'rgba(255,123,92,0.05)', pointBackgroundColor:'#FF7B5C', borderWidth:1.5, borderDash:[4,3], pointRadius:3 }] }, options: { ...baseOpts(), scales: { r: { backgroundColor:'transparent', grid:{ color:DARK.grid }, pointLabels:{ color:DARK.tick, font:{size:11} }, ticks:{ backdropColor:'transparent', color:DARK.tick, font:{size:10}, stepSize:20 }, min:0, max:100 } } } });
+new Chart(document.getElementById('trajectoryChart'), { type:'line', data:{ labels:['2026','2027','2028','2029','2030','2031','2032','2033'], datasets:[{ label:'Environmental', data:[88,90,91,93,94,95,96,97], borderColor:'#5EDFA8', backgroundColor:'rgba(94,223,168,0.08)', fill:true, tension:0.4, pointRadius:4, pointBackgroundColor:'#5EDFA8' },{ label:'Social', data:[82,84,86,87,89,90,91,93], borderColor:'#7C5CFF', backgroundColor:'rgba(124,92,255,0.08)', fill:true, tension:0.4, pointRadius:4, pointBackgroundColor:'#7C5CFF' },{ label:'Governance', data:[79,81,83,85,86,88,89,91], borderColor:'#FFD166', backgroundColor:'rgba(255,209,102,0.08)', fill:true, tension:0.4, pointRadius:4, pointBackgroundColor:'#FFD166' },{ label:'Composite', data:[83,85,87,88,90,91,92,94], borderColor:'rgba(255,255,255,0.3)', backgroundColor:'transparent', tension:0.4, pointRadius:3, borderDash:[5,4], borderWidth:1.5 }] }, options:{ ...baseOpts(), scales:{ x:{ grid:{color:DARK.grid}, ticks:{color:DARK.tick} }, y:{ grid:{color:DARK.grid}, ticks:{color:DARK.tick}, min:70, max:100 } } } });
+new Chart(document.getElementById('envBarChart'), { type:'bar', data:{ labels:['Copper\nCO₂ equiv.','Aluminium\nCO₂ equiv.','Total CO₂\nAvoided','Copper\nSaved (tons)','Aluminium\nSaved (tons)'], datasets:[{ label:'Amount', data:[17500,60000,77500,5000,5000], backgroundColor:['#5EDFA8','#7C5CFF','#FF7B5C','#5EDFA8','#7C5CFF'], borderRadius:6 }] }, options:{ ...baseOpts(), scales:{ x:{ grid:{display:false}, ticks:{color:DARK.tick, font:{size:10}} }, y:{ grid:{color:DARK.grid}, ticks:{color:DARK.tick, callback: v => v>=1000?(v/1000).toFixed(0)+'K':v} } } } });
+new Chart(document.getElementById('carbonDonut'), { type:'doughnut', data:{ labels:['Kitchen (P1)','E-bikes (P2)','Robotics (P3)','Furniture (P4)','EV (P5)'], datasets:[{ data:[20,25,22,15,18], backgroundColor:['#5EDFA8','#7C5CFF','#FFD166','#FF7B5C','#A0A0FF'], borderColor:'#15151E', borderWidth:2, hoverOffset:8 }] }, options:{ ...baseOpts(), cutout:'65%' } });
+new Chart(document.getElementById('envLineChart'), { type:'line', data:{ labels:['Y1','Y2','Y3','Y4','Y5','Y6','Y7','Y8','Y9','Y10'], datasets:[{ label:'CO₂ Avoided (K tons)', data:[5,8,12,18,28,42,55,68,78,92], borderColor:'#5EDFA8', backgroundColor:'rgba(94,223,168,0.1)', fill:true, tension:0.4, pointRadius:3, yAxisID:'y' },{ label:'Materials Saved (tons)', data:[500,900,1500,2800,5000,8000,11000,14000,17000,21000], borderColor:'#7C5CFF', backgroundColor:'transparent', tension:0.4, pointRadius:3, borderDash:[5,3], yAxisID:'y1' },{ label:'Efficiency %', data:[80,81,82,83,84,85,86,87,87,88], borderColor:'#FFD166', backgroundColor:'transparent', tension:0.4, pointRadius:3, borderDash:[3,3], yAxisID:'y2' }] }, options:{ ...baseOpts(), scales:{ x:{ grid:{color:DARK.grid}, ticks:{color:DARK.tick} }, y:{ position:'left', grid:{color:DARK.grid}, ticks:{color:'#5EDFA8', font:{size:10}} }, y1:{ position:'right', display:false }, y2:{ position:'right', display:false } } } });
+new Chart(document.getElementById('teamDonut'), { type:'doughnut', data:{ labels:['Engineering (9)','Biz Dev & Mktg (8)','Finance (5)','App Dev (4)'], datasets:[{ data:[9,8,5,4], backgroundColor:['#7C5CFF','#5EDFA8','#FFD166','#FF7B5C'], borderColor:'#15151E', borderWidth:2, hoverOffset:8 }] }, options:{ ...baseOpts(), cutout:'65%' } });
+new Chart(document.getElementById('socialBar'), { type:'bar', data:{ labels:['Cable Clutter','E-Waste','Electrical\nHazards','Adapter\nIncompat.','Metal\nDisposal','Energy\nInefficiency'], datasets:[{ label:'Users Affected (%)', data:[80,65,55,70,45,60], backgroundColor:'rgba(124,92,255,0.7)', borderRadius:4 },{ label:'Impact Score (EW Solution)', data:[95,88,97,92,85,84], backgroundColor:'rgba(94,223,168,0.5)', borderRadius:4 }] }, options:{ ...baseOpts(), scales:{ x:{ grid:{display:false}, ticks:{color:DARK.tick, font:{size:10}} }, y:{ grid:{color:DARK.grid}, ticks:{color:DARK.tick} } } } });
+new Chart(document.getElementById('fundingPie'), { type:'doughnut', data:{ labels:['Marketing & Sales 25%','Tech Development 20%','Mfg & Supply 20%','R&D 15%','Contingency 10%','Operations 10%'], datasets:[{ data:[25,20,20,15,10,10], backgroundColor:['#7C5CFF','#5EDFA8','#FFD166','#FF7B5C','#A0A0FF','#F0A0FF'], borderColor:'#15151E', borderWidth:2, hoverOffset:8 }] }, options:{ ...baseOpts(), cutout:'60%' } });
+new Chart(document.getElementById('financeChart'), { type:'bar', data:{ labels:['Y1','Y2','Y3','Y4','Y5','Y6','Y7','Y8','Y9','Y10'], datasets:[{ label:'Net Profit/Loss ($M)', data:[-0.66,-1.23,1.59,12.67,18.48,28.47,42.85,49.67,33.47,54.34], backgroundColor: (ctx) => ctx.raw < 0 ? 'rgba(255,123,92,0.7)' : 'rgba(94,223,168,0.7)', borderRadius:4 },{ label:'Cash Inflow ($M)', data:[0,0.5,4,14,21,48,68,75,103,152], borderColor:'#FFD166', backgroundColor:'transparent', tension:0.4, pointRadius:3, type:'line', yAxisID:'y' }] }, options:{ ...baseOpts(), scales:{ x:{ grid:{display:false}, ticks:{color:DARK.tick} }, y:{ grid:{color:DARK.grid}, ticks:{color:DARK.tick, callback: v=>'$'+v+'M'} } } } });
+const matData = [
+  {x:9.2,y:9.5,r:18,label:'E-Waste Reduction',color:'#5EDFA8'},{x:8.5,y:8.8,r:14,label:'CO₂ Reduction',color:'#5EDFA8'},{x:7.2,y:7.5,r:11,label:'Supply Chain',color:'#5EDFA8'},{x:6.0,y:6.5,r:8,label:'Water & Resources',color:'#5EDFA8'},
+  {x:9.0,y:9.2,r:16,label:'Safety Innovation',color:'#7C5CFF'},{x:7.8,y:7.0,r:12,label:'Workforce Diversity',color:'#7C5CFF'},{x:6.5,y:6.0,r:9,label:'Community Impact',color:'#7C5CFF'},{x:5.5,y:5.5,r:8,label:'Health (Elly AI)',color:'#7C5CFF'},
+  {x:8.0,y:8.5,r:13,label:'Regulatory Compliance',color:'#FFD166'},{x:7.5,y:8.7,r:14,label:'IP Protection',color:'#FFD166'},{x:7.5,y:7.0,r:10,label:'Data Privacy',color:'#FFD166'},{x:6.0,y:7.0,r:9,label:'Investor Transparency',color:'#FFD166'},
+  {x:8.8,y:9.0,r:15,label:'AI Energy Efficiency',color:'#FF7B5C'},{x:8.0,y:8.0,r:12,label:'WPT Technology',color:'#FF7B5C'},{x:6.5,y:7.5,r:10,label:'Foreign Object Safety',color:'#FF7B5C'},{x:5.0,y:6.0,r:8,label:'App Platform (Elly)',color:'#FF7B5C'}
+];
+new Chart(document.getElementById('matBubble'), { type:'bubble', data:{ datasets: matData.map(d=>({ label:d.label, data:[{x:d.x,y:d.y,r:d.r}], backgroundColor:d.color+'AA', borderColor:d.color, borderWidth:1.5 })) }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'#1C1C2A', titleColor:'#F0EEF8', bodyColor:'#9490B0', borderColor:'rgba(255,255,255,0.1)', borderWidth:1, callbacks:{ title:ctx=>ctx[0].dataset.label, label:ctx=>`Stakeholder: ${ctx.raw.x} | Business: ${ctx.raw.y}` } } }, scales:{ x:{ min:4, max:10, grid:{color:'rgba(255,255,255,0.06)'}, ticks:{color:DARK.tick}, title:{display:true,text:'Importance to Stakeholders →',color:DARK.tick,font:{size:11}} }, y:{ min:4, max:10, grid:{color:'rgba(255,255,255,0.06)'}, ticks:{color:DARK.tick}, title:{display:true,text:'Business Impact →',color:DARK.tick,font:{size:11}} } } } });
+new Chart(document.getElementById('compBar'), { type:'bar', data:{ labels:['Environmental','Social','Governance'], datasets:[{ label:'ElectraWireless', data:[88,82,79], backgroundColor:'rgba(94,223,168,0.8)', borderRadius:4 },{ label:'WiTricity', data:[60,58,72], backgroundColor:'rgba(100,100,120,0.7)', borderRadius:4 },{ label:'Ossia', data:[52,55,65], backgroundColor:'rgba(80,80,100,0.6)', borderRadius:4 },{ label:'Trad. Players', data:[40,65,58], backgroundColor:'rgba(60,60,80,0.5)', borderRadius:4 }] }, options:{ ...baseOpts(), scales:{ x:{ grid:{display:false}, ticks:{color:DARK.tick} }, y:{ grid:{color:DARK.grid}, ticks:{color:DARK.tick}, max:100 } } } });
+new Chart(document.getElementById('marketBar'), { type:'bar', data:{ labels:['Kitchen\nAppliances','E-Bikes','Robotics','EV Charging','IoT/Office','Medical\nDevices'], datasets:[{ label:'ElectraWireless', data:[200,20,80,200,140,50], backgroundColor:'rgba(94,223,168,0.8)', borderRadius:4 },{ label:'Best Competitor', data:[0,0,80,200,0,50], backgroundColor:'rgba(100,100,120,0.5)', borderRadius:4 }] }, options:{ ...baseOpts(), scales:{ x:{ grid:{display:false}, ticks:{color:DARK.tick, font:{size:10}} }, y:{ grid:{color:DARK.grid}, ticks:{color:DARK.tick, callback: v=>'$'+v+'B'} } } } });
+</script>
+</body>
+</html>
